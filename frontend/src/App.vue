@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { computed, onMounted, ref } from 'vue'
+
 import {
   Wallet,
   TrendingUp,
@@ -6,129 +8,103 @@ import {
   PiggyBank
 } from 'lucide-vue-next'
 
-import AppSidebar from './components/layout/AppSidebar.vue'
-import AppHeader from './components/layout/AppHeader.vue'
-import SummaryCard from './components/dashboard/SummaryCard.vue'
+import { getDashboardSummary } from './services/dashboardService'
 
-const summaryCards = [
-  {
-    title: 'Total Balance',
-    amount: '₹95,000',
-    description: 'Your current net balance',
-    icon: Wallet,
-    iconColor: 'bg-blue-50 text-blue-600'
-  },
-  {
-    title: 'Total Income',
-    amount: '₹1,20,000',
-    description: 'Income received this month',
-    icon: TrendingUp,
-    iconColor: 'bg-green-50 text-green-600'
-  },
-  {
-    title: 'Total Expenses',
-    amount: '₹25,000',
-    description: 'Expenses this month',
-    icon: TrendingDown,
-    iconColor: 'bg-red-50 text-red-600'
-  },
-  {
-    title: 'Savings Rate',
-    amount: '79.17%',
-    description: 'Percentage of income saved',
-    icon: PiggyBank,
-    iconColor: 'bg-purple-50 text-purple-600'
+import type { DashboardSummary } from './types/dashboard'
+
+const summary = ref<DashboardSummary | null>(null)
+
+const loading = ref(true)
+const error = ref('')
+
+const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    maximumFractionDigits: 2
+  }).format(amount)
+}
+
+const summaryCards = computed(() => {
+  if (!summary.value) return []
+
+  return [
+    {
+      title: 'Total Balance',
+      amount: formatCurrency(summary.value.balance),
+      description: 'Your current net balance',
+      icon: Wallet,
+      iconColor: 'bg-blue-50 text-blue-600'
+    },
+    {
+      title: 'Total Income',
+      amount: formatCurrency(summary.value.total_income),
+      description: 'Income received',
+      icon: TrendingUp,
+      iconColor: 'bg-green-50 text-green-600'
+    },
+    {
+      title: 'Total Expenses',
+      amount: formatCurrency(summary.value.total_expenses),
+      description: 'Total expenses',
+      icon: TrendingDown,
+      iconColor: 'bg-red-50 text-red-600'
+    },
+    {
+      title: 'Savings Rate',
+      amount: `${summary.value.savings_rate}%`,
+      description: 'Percentage of income saved',
+      icon: PiggyBank,
+      iconColor: 'bg-purple-50 text-purple-600'
+    }
+  ]
+})
+
+const loadDashboard = async () => {
+  loading.value = true
+  error.value = ''
+
+  try {
+    summary.value = await getDashboardSummary()
+  } catch (err) {
+    console.error('Dashboard API error:', err)
+    error.value = 'Unable to load dashboard data. Please check the backend.'
+  } finally {
+    loading.value = false
   }
-]
+}
+
+onMounted(() => {
+  loadDashboard()
+})
 </script>
 
 <template>
-  <div class="min-h-screen bg-slate-50 lg:flex">
-
-    <AppSidebar class="hidden lg:flex" />
-
-    <main class="min-w-0 flex-1">
-      <AppHeader />
-
-      <div class="space-y-8 p-6 lg:p-8">
-
-        <!-- Welcome section -->
-        <section>
-          <h2 class="text-xl font-bold text-slate-900">
-            Welcome back!
-          </h2>
-
-          <p class="mt-1 text-sm text-slate-500">
-            Here's what's happening with your money.
-          </p>
-        </section>
-
-        <!-- Summary cards -->
-        <section>
-          <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
-            <SummaryCard
-              v-for="card in summaryCards"
-              :key="card.title"
-              v-bind="card"
-            />
-          </div>
-        </section>
-
-        <!-- Charts section -->
-        <section class="grid grid-cols-1 gap-6 xl:grid-cols-2">
-
-          <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h3 class="font-semibold text-slate-900">
-              Income vs Expenses
-            </h3>
-
-            <p class="mt-1 text-sm text-slate-500">
-              Your monthly financial performance
-            </p>
-
-            <div class="mt-6 flex h-64 items-center justify-center rounded-lg bg-slate-50">
-              <p class="text-sm text-slate-400">
-                Monthly chart coming soon
-              </p>
-            </div>
-          </div>
-
-          <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h3 class="font-semibold text-slate-900">
-              Spending Breakdown
-            </h3>
-
-            <p class="mt-1 text-sm text-slate-500">
-              Where your money goes
-            </p>
-
-            <div class="mt-6 flex h-64 items-center justify-center rounded-lg bg-slate-50">
-              <p class="text-sm text-slate-400">
-                Category chart coming soon
-              </p>
-            </div>
-          </div>
-
-        </section>
-
-        <!-- Recent transactions placeholder -->
-        <section class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h3 class="font-semibold text-slate-900">
-            Recent Transactions
-          </h3>
-
-          <p class="mt-1 text-sm text-slate-500">
-            Your latest income and expenses will appear here.
-          </p>
-
-          <div class="mt-6 flex h-24 items-center justify-center rounded-lg bg-slate-50">
-            <p class="text-sm text-slate-400">
-              Transactions table coming soon
-            </p>
-          </div>
-        </section>
-
-      </div>
-    </main>
+<section>
+  <div v-if="loading" class="py-10 text-center text-slate-500">
+    Loading financial data...
   </div>
+
+  <div v-else-if="error" class="rounded-xl bg-red-50 p-5 text-red-600">
+    {{ error }}
+
+    <button
+      @click="loadDashboard"
+      class="ml-3 font-semibold underline"
+    >
+      Retry
+    </button>
+  </div>
+
+  <div
+    v-else
+    class="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4"
+  >
+    <SummaryCard
+      v-for="card in summaryCards"
+      :key="card.title"
+      v-bind="card"
+    />
+  </div>
+</section>
 </template>
