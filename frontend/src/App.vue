@@ -8,14 +8,27 @@ import {
   PiggyBank
 } from 'lucide-vue-next'
 
-import { getDashboardSummary } from './services/dashboardService'
+import SummaryCard from './components/dashboard/SummaryCard.vue'
+import MonthlyTrendsChart from './components/dashboard/MonthlyTrendsChart.vue'
+import CategorySpendingChart from './components/dashboard/CategorySpendingChart.vue'
+import {
+  getDashboardSummary,
+  getCategorySpending,
+  getMonthlyTrends
+} from './services/dashboardService'
 
-import type { DashboardSummary } from './types/dashboard'
+import type { CategorySpending, DashboardSummary, MonthlyTrend } from './types/dashboard'
 
 const summary = ref<DashboardSummary | null>(null)
 
 const loading = ref(true)
 const error = ref('')
+const categories = ref<CategorySpending[]>([])
+const monthlyTrends = ref<MonthlyTrend[]>([])
+const categoriesLoading = ref(true)
+const trendsLoading = ref(true)
+const categoriesError = ref('')
+const trendsError = ref('')
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('en-IN', {
@@ -74,12 +87,45 @@ const loadDashboard = async () => {
   }
 }
 
+const loadCategories = async () => {
+  categoriesLoading.value = true
+  categoriesError.value = ''
+  try {
+    categories.value = await getCategorySpending()
+  } catch (err) {
+    console.error('Category spending API error:', err)
+    categoriesError.value = 'Unable to load category spending.'
+  } finally {
+    categoriesLoading.value = false
+  }
+}
+
+const loadMonthlyTrends = async () => {
+  trendsLoading.value = true
+  trendsError.value = ''
+  try {
+    monthlyTrends.value = await getMonthlyTrends()
+  } catch (err) {
+    console.error('Monthly trends API error:', err)
+    trendsError.value = 'Unable to load monthly trends.'
+  } finally {
+    trendsLoading.value = false
+  }
+}
+
 onMounted(() => {
   loadDashboard()
+  loadCategories()
+  loadMonthlyTrends()
 })
 </script>
 
 <template>
+<main class="min-h-screen space-y-8 p-5 sm:p-8">
+<header>
+  <h1 class="m-0 text-3xl font-bold text-slate-900">Dashboard</h1>
+  <p class="mt-2 text-sm text-slate-500">Here's an overview of your finances.</p>
+</header>
 <section>
   <div v-if="loading" class="py-10 text-center text-slate-500">
     Loading financial data...
@@ -107,4 +153,19 @@ onMounted(() => {
     />
   </div>
 </section>
+<section class="grid grid-cols-1 gap-5 xl:grid-cols-2">
+  <MonthlyTrendsChart
+    :data="monthlyTrends"
+    :loading="trendsLoading"
+    :error="trendsError"
+    @retry="loadMonthlyTrends"
+  />
+  <CategorySpendingChart
+    :data="categories"
+    :loading="categoriesLoading"
+    :error="categoriesError"
+    @retry="loadCategories"
+  />
+</section>
+</main>
 </template>
