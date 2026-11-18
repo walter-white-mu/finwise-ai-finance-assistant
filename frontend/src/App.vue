@@ -11,6 +11,7 @@ import {
 import SummaryCard from './components/dashboard/SummaryCard.vue'
 import MonthlyTrendsChart from './components/dashboard/MonthlyTrendsChart.vue'
 import CategorySpendingChart from './components/dashboard/CategorySpendingChart.vue'
+import TransactionsPage from './components/transactions/TransactionsPage.vue'
 import {
   getDashboardSummary,
   getCategorySpending,
@@ -20,6 +21,7 @@ import {
 import type { CategorySpending, DashboardSummary, MonthlyTrend } from './types/dashboard'
 
 const summary = ref<DashboardSummary | null>(null)
+const currentView = ref<'dashboard' | 'transactions'>('dashboard')
 
 const loading = ref(true)
 const error = ref('')
@@ -113,6 +115,10 @@ const loadMonthlyTrends = async () => {
   }
 }
 
+const refreshDashboard = async () => {
+  await Promise.all([loadDashboard(), loadCategories(), loadMonthlyTrends()])
+}
+
 onMounted(() => {
   loadDashboard()
   loadCategories()
@@ -122,10 +128,17 @@ onMounted(() => {
 
 <template>
 <main class="min-h-screen space-y-8 p-5 sm:p-8">
-<header>
-  <h1 class="m-0 text-3xl font-bold text-slate-900">Dashboard</h1>
-  <p class="mt-2 text-sm text-slate-500">Here's an overview of your finances.</p>
+<header class="flex flex-wrap items-center justify-between gap-4">
+  <div>
+    <h1 class="m-0 text-3xl font-bold text-blue-700">FinWise</h1>
+    <p class="mt-2 text-sm text-slate-500">Your personal finance overview.</p>
+  </div>
+  <nav class="flex gap-2 rounded-xl bg-slate-100 p-1" aria-label="Main navigation">
+    <button class="rounded-lg px-4 py-2 text-sm font-semibold" :class="currentView === 'dashboard' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-600'" @click="currentView = 'dashboard'">Dashboard</button>
+    <button class="rounded-lg px-4 py-2 text-sm font-semibold" :class="currentView === 'transactions' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-600'" @click="currentView = 'transactions'">Transactions</button>
+  </nav>
 </header>
+<div v-if="currentView === 'dashboard'">
 <section>
   <div v-if="loading" class="py-10 text-center text-slate-500">
     Loading financial data...
@@ -167,5 +180,7 @@ onMounted(() => {
     @retry="loadCategories"
   />
 </section>
+</div>
+<TransactionsPage v-else @changed="refreshDashboard" />
 </main>
 </template>
