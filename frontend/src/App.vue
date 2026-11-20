@@ -12,6 +12,7 @@ import SummaryCard from './components/dashboard/SummaryCard.vue'
 import MonthlyTrendsChart from './components/dashboard/MonthlyTrendsChart.vue'
 import CategorySpendingChart from './components/dashboard/CategorySpendingChart.vue'
 import TransactionsPage from './components/transactions/TransactionsPage.vue'
+import SavingsGoalsPage from './components/savingsGoals/SavingsGoalsPage.vue'
 import {
   getDashboardSummary,
   getCategorySpending,
@@ -21,7 +22,7 @@ import {
 import type { CategorySpending, DashboardSummary, MonthlyTrend } from './types/dashboard'
 
 const summary = ref<DashboardSummary | null>(null)
-const currentView = ref<'dashboard' | 'transactions'>('dashboard')
+const currentView = ref<'dashboard' | 'transactions' | 'savings-goals'>('dashboard')
 
 const loading = ref(true)
 const error = ref('')
@@ -136,6 +137,7 @@ onMounted(() => {
   <nav class="flex gap-2 rounded-xl bg-slate-100 p-1" aria-label="Main navigation">
     <button class="rounded-lg px-4 py-2 text-sm font-semibold" :class="currentView === 'dashboard' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-600'" @click="currentView = 'dashboard'">Dashboard</button>
     <button class="rounded-lg px-4 py-2 text-sm font-semibold" :class="currentView === 'transactions' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-600'" @click="currentView = 'transactions'">Transactions</button>
+    <button class="rounded-lg px-4 py-2 text-sm font-semibold" :class="currentView === 'savings-goals' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-600'" @click="currentView = 'savings-goals'">Savings goals</button>
   </nav>
 </header>
 <div v-if="currentView === 'dashboard'">
@@ -181,6 +183,7 @@ onMounted(() => {
   />
 </section>
 </div>
-<TransactionsPage v-else @changed="refreshDashboard" />
+<TransactionsPage v-else-if="currentView === 'transactions'" @changed="refreshDashboard" />
+<SavingsGoalsPage v-if="currentView === 'savings-goals'" />
 </main>
 </template>

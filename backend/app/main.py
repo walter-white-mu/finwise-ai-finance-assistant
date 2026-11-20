@@ -7,6 +7,7 @@ from app.db.database import Base, engine
 from app.db import models
 from app.api.routes import transactions
 from app.api.routes import dashboard
+from app.api.routes import savings_goals
 
 
 @asynccontextmanager
@@ -36,6 +37,7 @@ app.add_middleware(
 
 app.include_router(transactions.router)
 app.include_router(dashboard.router)
+app.include_router(savings_goals.router)
 
 
 @app.get("/")
