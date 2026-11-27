@@ -13,6 +13,8 @@ import MonthlyTrendsChart from './components/dashboard/MonthlyTrendsChart.vue'
 import CategorySpendingChart from './components/dashboard/CategorySpendingChart.vue'
 import TransactionsPage from './components/transactions/TransactionsPage.vue'
 import SavingsGoalsPage from './components/savingsGoals/SavingsGoalsPage.vue'
+import FinancialInsightsPage from './components/insights/FinancialInsightsPage.vue'
+import ChatPage from './components/chat/ChatPage.vue'
 import {
   getDashboardSummary,
   getCategorySpending,
@@ -22,7 +24,7 @@ import {
 import type { CategorySpending, DashboardSummary, MonthlyTrend } from './types/dashboard'
 
 const summary = ref<DashboardSummary | null>(null)
-const currentView = ref<'dashboard' | 'transactions' | 'savings-goals'>('dashboard')
+const currentView = ref<'dashboard' | 'transactions' | 'savings-goals' | 'insights' | 'assistant'>('dashboard')
 
 const loading = ref(true)
 const error = ref('')
@@ -138,6 +140,8 @@ onMounted(() => {
     <button class="rounded-lg px-4 py-2 text-sm font-semibold" :class="currentView === 'dashboard' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-600'" @click="currentView = 'dashboard'">Dashboard</button>
     <button class="rounded-lg px-4 py-2 text-sm font-semibold" :class="currentView === 'transactions' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-600'" @click="currentView = 'transactions'">Transactions</button>
     <button class="rounded-lg px-4 py-2 text-sm font-semibold" :class="currentView === 'savings-goals' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-600'" @click="currentView = 'savings-goals'">Savings goals</button>
+    <button class="rounded-lg px-4 py-2 text-sm font-semibold" :class="currentView === 'insights' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-600'" @click="currentView = 'insights'">Financial insights</button>
+    <button class="rounded-lg px-4 py-2 text-sm font-semibold" :class="currentView === 'assistant' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-600'" @click="currentView = 'assistant'">AI assistant</button>
   </nav>
 </header>
 <div v-if="currentView === 'dashboard'">
@@ -184,6 +188,8 @@ onMounted(() => {
 </section>
 </div>
 <TransactionsPage v-else-if="currentView === 'transactions'" @changed="refreshDashboard" />
-<SavingsGoalsPage v-if="currentView === 'savings-goals'" />
+<SavingsGoalsPage v-else-if="currentView === 'savings-goals'" />
+<FinancialInsightsPage v-else-if="currentView === 'insights'" />
+<ChatPage v-else />
 </main>
 </template>
