@@ -10,6 +10,7 @@ from app.api.routes import dashboard
 from app.api.routes import savings_goals
 from app.api.routes import insights
 from app.api.routes import chat
+from app.api.routes import documents
 
 
 @asynccontextmanager
@@ -42,6 +43,7 @@ app.include_router(dashboard.router)
 app.include_router(savings_goals.router)
 app.include_router(insights.router)
 app.include_router(chat.router)
+app.include_router(documents.router)
 
 
 @app.get("/")
